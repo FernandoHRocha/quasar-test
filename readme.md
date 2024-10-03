@@ -1,8 +1,10 @@
 # Introdução
 
-Gostaria primeiramente de agradecer a empresa pela oportunidade de participar de seu processo seletivo.
+Este repositório foi criado com o objetivo de documentar as respostas e soluções desenvolvidas durante o processo seletivo para a oportunidade de Desenvolvedor Fullstack de uma empresa que atua com a gestão de dados geoespaciais. Aqui apresento minhas abordagens técnicas para resolver problemas relacionados ao processamento de dados georreferenciados.
 
-# Interview Questions
+Gostaria de agradecer a empresa pela oportunidade de participar de seu processo seletivo e ainda conhecer um pouco sobre os desafios diários e as tecnologias utilizadas para resolver problemas complexos de forma eficiente.
+
+# Questões
 
 ## Conceituais
 
@@ -56,7 +58,7 @@ As tabelas foram criadas de acordo com o nome do arquivo, sendo elas *municipio*
 
 As tabelas foram populadas através do software QGIS, sendo que este foi instalado na máquina, realizado a conexão e importado os arquivos para o banco de dados.
 
-#### Questão 1
+### Questão 1
 Para encontrar o número de pluviômetros em cada município é necessário realizar uma junção (join) entre as tabelas *municipio* e *pluviometros*. As colunas de ligação para a cláusula **ON** são o ponto de localização de cada pluviometro e a área de cada município.
 
 Segundo o capítulo [11. Spatial Relationships](https://postgis.net/workshops/postgis-intro/spatial_relationships.html) da documentação do PostGIS, é possível utilizar funções como a **ST_Intersects** para verificar a interseção entre ponto e polígono, ou seja, se o ponto está contido dentro da área do polígono a função retorna um valor verdadeiro. E no capítulo [13. Spatial Joins](https://postgis.net/workshops/postgis-intro/joins.html) é demonstrado a possibilidade de realizar a junção entre as duas tabelas através dessas funções. O script SQL que dará a resposta correta é o seguinte:
@@ -80,7 +82,7 @@ Os registros resultantes da consulta são mostrados na imagem abaixo:
 
 ![O número de pluviômetros em cada município.](./docs/practice1.png)
 
-#### Questão 2
+### Questão 2
 A precipitação média é obtida utilizando a função **AVG** (abreviação de average, em tradução direta média) a partir da mesma lógica que utilizamos na questão anterior para realizar a junção das tabelas, ficando da seguinte maneira:
 
 ```SQL
@@ -102,7 +104,7 @@ Os registros resultantes da consulta são mostrados na imagem abaixo:
 
 ![A precipitação média em 96h para cada município.](./docs/practice2.png)
 
-#### Questão 3
+### Questão 3
 A distância entre cada pluviômetros e cada ponto de interesse possui uma relação diferente, onde será utilizado a junção **CROSS JOIN** para associar cada registro da tabela *pluviometros* com cada um dos registros da tabela *pontos_interesse*,sem a necessidade de uma coluna de ligação entre elas.
 
 Ainda no capítulo [11. Spatial Relationships](https://postgis.net/workshops/postgis-intro/spatial_relationships.html) temos a função **ST_Distance** que retorna um valor numérico representando a distância entre duas geometrias.
@@ -124,7 +126,7 @@ Os registros resultantes da consulta são parcialmente mostrados (pois foram 98 
 
 ![A distância entre os pluviômetros e cada um dos pontos de interesse.](./docs/practice3.png)
 
-#### Questão 4
+### Questão 4
 O diagrama de Voronoi é uma decomposição do espaço de acordo com as distâncias entre um conjunto de pontos distribuídos, onde cada porção ou área é chamada de célula de Voronoi. Para cada célula de Voronoi é garantido que qualquer ponto em seu interior terá a menor distância até o ponto distribuído do que qualquer outro ponto distribuído das outras células. A técnica é utilizada em design de jogos para gerações procedurais, em computação gráfica para criação de padrões, geografia e urbanismo para dividir áreas de influência entre outros exemplos.
 
 Segundo a documentação da função [ST_VoronoiPolygons](https://postgis.net/docs/ST_VoronoiPolygons.html) é recebido como primeiro parâmetro uma coleção de vértices, que nesse caso são os pontos de pluviometria. Para reunir os dados de maneira a satisfazer a função de Voronoi, utilizamos a função [ST_Collect](https://postgis.net/docs/ST_Collect.html) para criar a coleção de pontos. Em seguida aplicamos a função de Voronoi que retorna uma coleção de geometrias e em seguida a função [ST_CollectionExtract](https://postgis.net/docs/ST_CollectionExtract.html) para retornar um multi-geometry.
