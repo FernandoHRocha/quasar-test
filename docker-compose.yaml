@@ -1,0 +1,36 @@
+version: '3.1'
+networks:
+  database:
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+services:
+  postgis:
+    container_name: postgis_database
+    build: ./database
+    restart: always
+    environment:
+      - POSTGRES_DB=quasar
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5432:5432
+    networks:
+      database:
+        # host para conexão no pgadmin
+        ipv4_address: 172.21.0.5
+  pgadmin:
+    container_name: postgis_admin
+    build: ./database-admin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=contato@nandorocha.com.br
+      - PGADMIN_DEFAULT_PASSWORD=password
+      - PGADMIN_LISTEN_PORT=8080
+    ports:
+      - 8080:8080
+    networks:
+      - database
+    depends_on:
+      - postgis
+  
