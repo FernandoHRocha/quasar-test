@@ -1,6 +1,6 @@
 # Introdução
 
-Este repositório foi criado com o objetivo de documentar as respostas e soluções desenvolvidas durante o processo seletivo para a oportunidade de Desenvolvedor Fullstack de uma empresa que atua com a gestão de dados geoespaciais. Aqui apresento minhas abordagens técnicas para resolver problemas relacionados ao processamento de dados georreferenciados.
+Este repositório foi criado com o objetivo de documentar as respostas e soluções desenvolvidas durante um processo seletivo para a oportunidade de Desenvolvedor Fullstack de uma empresa que atua com a gestão de dados geoespaciais. Aqui apresento minhas abordagens técnicas para resolver problemas relacionados ao processamento de dados georreferenciados.
 
 Gostaria de agradecer a empresa pela oportunidade de participar de seu processo seletivo e ainda conhecer um pouco sobre os desafios diários e as tecnologias utilizadas para resolver problemas complexos de forma eficiente.
 
@@ -47,12 +47,53 @@ dos pontos de interesse cai?
 
 ## Conceituais
 
+### 1.
+
+O fundamental neste caso é a utilização de um banco de dados com suporte apropriado para tipos de dados geoespaciais. O banco de dados relacional PostgreSQL conta com a extensão PostGIS que oferece recursos como armazenamento de dados espaciais como pontos, linhas, polígonos e multigeometrias em 2D e 3D, indexação espacial para buscas ageis, funções espaciais que permitem analisar e filtrar dados geograficos e ainda oferecendo integrações com aplicações como QGIS e Tableau.
+
+A fim de otimizar consultas e reduzir cargas é possível escolher estratégias como o uso de tabelas separadas, mas relacionadas, para armazenamento de metadados e outra para informações contextuais, por exemplo, em uma tabela teriamos informações como timestamp, temperatura, precipitação e humidade e em outra teriamos o armazenamento de informações geoespaciais.
+
+O postGis oferece uma opção eficiente para índices geoespaciais como o GIST (Generalized Search Tree), que é ideal para buscas espaciais, e ainda é possível aplicar índices em colunas temporais para acelerar consultas baseadas no tempo.
+
+Um sistema de tags pode agilizar a busca por dados relevantes e ajudar a organiza-los, principalmente quando tratamos de informações com várias dimensões como temperatura, precipitação, umidade e afins. As tags podem ser implementadas em formato de array, onde uma única coluna poderia ter nenhuma ou várias tags para classificar seus registros. Retornando ao exemplo de fracionar as informações entre tabelas, existe a possibilidade de criar uma tabela para as tags e uma tabela relacionando os registros contextualizados às tags, como em um relacionamento muitos para muitos.
+
+### 2.
+
+Para auxiliar na otimização de consultas que não precisam necessariamente ser executadas em tempo real, é válido pensar em utilizar as [Materialized Views](https://www.postgresql.org/docs/current/rules-materializedviews.html) do PostgreSQL que utilizam de tabelas a parte para salvar informações sobre uma view em específico e podem ser atualizadas de acordo tempos em tempos de acordo com a necessidade e a disponibilidade de recursos.
+
+Ainda existe a possibilidade de utilizar a [Partição de Tabelas](https://www.postgresql.org/docs/current/ddl-partitioning.html) que divide uma tabela em vários segmentos, dando a possibilidade de executar consultas em determinada partição da tabela, que acontece de modo a ignorar as outras partições, e dessa maneira realizando filtros muito mais eficientes.
+
+Aliado ao banco relacional, a estratégia de adotar um banco de dados não relacional é super atraente pois apresenta maior agilidade na entrega do resultado. Armazenando o resultado de consultas recorrentes e/ou que necessitam de uma resposta mais rápida são oportunidades para bancos como o [Redis](https://redis.io/).
+
+A experiência do usuário pode ser beneficiada pelos argumentos acima que atuam do lado do backend, mas ainda existem recursos que podem ser aplicados no frontend, como paginações que aliviam a sobrecarga de informações e podem indicar a continuação das informações. Lazy loadings servem ao propósito de carregar quantias de dados relativamente menores conforme o usuário vai utilizando a página, evitando uma demora maior por um volume maior de informações. Para apresentação de gráficos, mapas ou interatividades existe a possibilidade de reduzir o conjunto de informações com funções de agregação, de modo que se possa demonstrar a informação correta e necessária, mas de modo sucinto e eficiente.
+
+### 3.
+
+A componentização modular pode vir a ser útil em um contexto onde a flexibilidade e manutenabilidade a longo prazo são prioridades. Condizendo com o padrão da Responsabilidade Única do SOLID, a criação de componentes especializados que podem vir a se repetir no código, garantem a usabilidade em vários lugares e a manutenção em apenas um. Por exemplo, podemos criar componente para renderizar um elemento específico para polígonos, outro para linhas e outro para pontos, não se limitando a associa-los com componentes capazes de realizar filtros.
+
+A componentização ainda permite uma arquitetura de componentes baseados em esquemas, onde cada parte do sistema pode apresentar um arquivo de esquema contendo diferentes componentes que o compõem.
+
+Vale ressaltar a necessidade de uma documentação muito bem construída, uma vez que os componentes precisarão se comunicar com o restante da aplicação para construir o sistema.
+
+### 4.
+
+No backend é possível configurar o cache no web server (como no nginx, por exemplo), ou com um banco de dados não relacional atuando em conjunto, assim é possível evitar o reprocessamento de funções e queries mais complexas, ou ainda servir os arquivos que são requisitados mais frequentemente.
+
+Caching em Web Storage é uma solução para reutilização dos dados armazenados diretamente no navegador, muito útil em sessões de uso prolongado, principalmente se os usuários interagem repetidamente com as mesmas regiões do mapa. A estratégia reutiliza os dados que estão em cache em vez de requisitar os mesmos dados para o servidor. Podendo priorizar por arquivos mais importantes ou mais utilizados caso o cliente tenha alguma limitação de armazenamento.
+
+Ao trabalhar com dados dinâmicos é importante estar atento a invalidação dos dados em cache. Pelo lado do servidor é possível realizar a invalidação por meio de eventos, pelo lado do cliente é possível a utilização de [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) para sincronizar as informações sem que seja necessária uma ação do usuário. Em ambos os casos é possível ainda, a utilização de invalidação temporal de cache, onde os arquivos em cache possuem um tempo de vida antes de serem excluídos ou renovados.
+
+### 5.
+
+Uma das soluções para gerenciamento de estado de aplicação, no caso do VueJS, é o [Vuex](https://vuex.vuejs.org/) que permite que qualquer componente da aplicação acesse dados armazenados, centralizando informações como os dados de preferências do usuário. Essa estratégia garante que determinadas informações estarão sempre a mão, sem que seja necessário uma requisição ao backend por exemplo, ou que fiquem expostos no local storage.
+
+O local storage por sua vez é uma alternativa interessante por possibilitar manter os dados armazenados entre sessões dos usuários, podendo recupera-los em visitas subsequentes, e só requisita-los no backend quando eles não estiverem presentes.
 
 ## Práticas
 
 ### Criação e população das tabelas:
 
-A fim de criar um banco de dados e um ambiente para administração, foi criado uma estrutura em docker, utilizando a imagem do [PostGIS](https://hub.docker.com/r/postgis/postgis) sendo o banco de dados PostgreSQL já com a extensão PostGIS para manipulação de dados geoespaciais, e a imagem do SGBD PgAdmin, que foi o ambiente utilizado para realização das consultas mostradas a seguir.
+A fim de criar um banco de dados e um ambiente para administração, foi criado uma estrutura em docker, utilizando a imagem do [PostGIS](https://hub.docker.com/r/postgis/postgis) sendo o banco de dados PostgreSQL já com a extensão PostGIS para manipulação de dados geoespaciais, e a imagem do SGBD [PgAdmin](https://hub.docker.com/r/elestio/pgadmin), que foi o ambiente utilizado para realização das consultas mostradas a seguir.
 
 As tabelas foram criadas de acordo com o nome do arquivo, sendo elas *municipio*, *pluviometros* e *pontos_interesse*. O script para geração das tabelas é encontrado no arquivo ./database/create-tables.sql.
 
